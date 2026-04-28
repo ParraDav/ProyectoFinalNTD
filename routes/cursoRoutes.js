@@ -6,7 +6,7 @@ router.post("/register", async (req, res) => {
     try {
         const { nombre, email, password } = req.body;
 
-        const hash =  bcrypt.hash(password, 10);
+        const hash = await bcrypt.hash(password, 10);
 
         const user = new Usuario({
             nombre,
@@ -38,7 +38,7 @@ router.post("/login", async (req, res) => {
 
         console.log("PASSWORD BD:", user.password);
 
-        const valid =  bcrypt.compare(password, user.password);
+        const valid = await bcrypt.compare(password, user.password);
         console.log("VALID:", valid);
 
         if (!valid) {
@@ -58,3 +58,5 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ mensaje: "Error en el servidor" });
     }
 });
+
+module.exports = router;
