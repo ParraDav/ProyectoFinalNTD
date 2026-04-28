@@ -8,17 +8,21 @@ require("dotenv").config();
 app.use(express.json());
 app.use(cors()); 
 
+app.get("/", (req, res) => {
+    res.send("API funcionando correctamente 🚀");
+});
+
 // Rutas
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/cursos", require("./routes/cursoRoutes"));
 
-//Conexion con MongoDB
+// Conexion con MongoDB
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     console.log("Conectado a MongoDB");
 
-    app.listen(process.env.PORT, () => {
-        console.log("Servidor corriendo en puerto " + process.env.PORT);
+    app.listen(process.env.PORT || 3000, () => {
+        console.log("Servidor corriendo en puerto " + (process.env.PORT || 3000));
     });
 })
 .catch(err => console.log(err));
