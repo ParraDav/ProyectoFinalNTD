@@ -17,11 +17,17 @@ router.get("/", async (req, res) => {
 });
 
 // Actualizar curso
-router.put("/:id",  async (req, res) => {
+router.put("/:id", async (req, res) => {
     const curso = await Curso.findByIdAndUpdate(
         req.params.id,
         req.body,
         { new: true }
     );
     res.json(curso);
+});
+
+// Eliminar curso
+router.delete("/:id", async (req, res) => {
+    await Curso.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: "Curso eliminado" });
 });
