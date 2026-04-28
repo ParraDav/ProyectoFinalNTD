@@ -7,7 +7,9 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/cursos", require("./routes/cursoRoutes"));
 
+//Conexion con MongoDB
 app.listen(3000, () => {
     console.log("Servidor corriendo");
 });
