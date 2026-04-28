@@ -9,3 +9,19 @@ router.post("/", async (req, res) => {
     await curso.save();
     res.json(curso);
 });
+
+// Obtener cursos
+router.get("/", async (req, res) => {
+    const cursos = await Curso.find();
+    res.json(cursos);
+});
+
+// Actualizar curso
+router.put("/:id",  async (req, res) => {
+    const curso = await Curso.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+    );
+    res.json(curso);
+});
