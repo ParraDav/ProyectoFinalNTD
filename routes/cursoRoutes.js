@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const Curso = require("../models/Curso");
+const verificarToken = require("../middleware/authMiddleware");
 
 // Registro
 router.post("/register", async (req, res) => {
