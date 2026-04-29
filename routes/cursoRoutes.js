@@ -2,9 +2,10 @@ const express = require("express");
 const router = express.Router();
 const Curso = require("../models/curso");
 const verificarToken = require("../middleware/authMiddleware");
+const verificarRol = require("../middleware/roleMiddleware");
 
 // Crear curso
-router.post("/", verificarToken, async (req, res) => {
+router.post("/", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
         const curso = new Curso({
             ...req.body,
@@ -24,7 +25,7 @@ router.get("/", verificarToken, async (req, res) => {
 });
 
 // Actualizar curso
-router.put("/:id", verificarToken, async (req, res) => {
+router.put("/:id", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     const curso = await Curso.findByIdAndUpdate(
         req.params.id,
         req.body,
@@ -34,7 +35,7 @@ router.put("/:id", verificarToken, async (req, res) => {
 });
 
 // Eliminar curso
-router.delete("/:id", verificarToken, async (req, res) => {
+router.delete("/:id", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     await Curso.findByIdAndDelete(req.params.id);
     res.json({ mensaje: "Curso eliminado" });
 });
