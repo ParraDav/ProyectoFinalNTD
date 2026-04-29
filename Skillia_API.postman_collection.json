@@ -239,6 +239,86 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Agregar Módulo (Instructor/Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"titulo\": \"Nuevo Módulo\",\r\n    \"contenido\": \"Contenido del nuevo módulo...\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cursos/PONER_ID_CURSO/modulos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos",
+								"PONER_ID_CURSO",
+								"modulos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Módulo (Instructor/Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"titulo\": \"Módulo Editado\",\r\n    \"contenido\": \"Contenido editado...\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cursos/PONER_ID_CURSO/modulos/PONER_ID_MODULO",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos",
+								"PONER_ID_CURSO",
+								"modulos",
+								"PONER_ID_MODULO"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Módulo (Instructor/Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cursos/PONER_ID_CURSO/modulos/PONER_ID_MODULO",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos",
+								"PONER_ID_CURSO",
+								"modulos",
+								"PONER_ID_MODULO"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},

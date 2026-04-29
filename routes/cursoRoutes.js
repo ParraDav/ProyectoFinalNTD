@@ -121,4 +121,74 @@ router.get("/:id/inscritos", verificarToken, verificarRol(['instructor', 'admini
     }
 });
 
+// Agregar un módulo a un curso
+router.post("/:id/modulos", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
+        }
+
+        const nuevoModulo = {
+            titulo: req.body.titulo,
+            contenido: req.body.contenido
+        };
+
+        curso.modulos.push(nuevoModulo);
+        await curso.save();
+
+        const moduloCreado = curso.modulos[curso.modulos.length - 1];
+        res.status(201).json({ mensaje: "Módulo agregado", modulo: moduloCreado });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al agregar módulo", error });
+    }
+});
+
+// Actualizar un módulo específico
+router.put("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
+        }
+
+        const modulo = curso.modulos.id(req.params.idModulo);
+        if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
+
+        if (req.body.titulo) modulo.titulo = req.body.titulo;
+        if (req.body.contenido) modulo.contenido = req.body.contenido;
+
+        await curso.save();
+        res.json({ mensaje: "Módulo actualizado", modulo });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al actualizar módulo", error });
+    }
+});
+
+// Eliminar un módulo específico
+router.delete("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
+        }
+
+        const modulo = curso.modulos.id(req.params.idModulo);
+        if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
+
+        curso.modulos.pull({ _id: req.params.idModulo });
+        await curso.save();
+        
+        res.json({ mensaje: "Módulo eliminado" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al eliminar módulo", error });
+    }
+});
+
 module.exports = router;
