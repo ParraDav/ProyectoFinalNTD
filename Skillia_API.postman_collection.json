@@ -102,6 +102,25 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Obtener Mis Cursos (Estudiante)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/usuarios/mis-cursos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"usuarios",
+								"mis-cursos"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
