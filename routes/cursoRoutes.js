@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Curso = require("../models/curso");
+const Inscripcion = require("../models/Inscripcion");
 const verificarToken = require("../middleware/authMiddleware");
 const verificarRol = require("../middleware/roleMiddleware");
 
@@ -74,6 +75,29 @@ router.delete("/:id", verificarToken, verificarRol(['instructor', 'administrador
         res.json({ mensaje: "Curso eliminado" });
     } catch (error) {
         res.status(500).json({ mensaje: "Error al eliminar curso", error });
+    }
+});
+
+// Inscribirse a un curso (solo estudiantes)
+router.post("/:id/inscribir", verificarToken, verificarRol(['estudiante']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso || curso.estado !== 'publicado') {
+            return res.status(404).json({ mensaje: "Curso no encontrado o no disponible" });
+        }
+
+        const inscripcion = new Inscripcion({
+            estudiante: req.usuario.id,
+            curso: curso._id
+        });
+
+        await inscripcion.save();
+        res.json({ mensaje: "Inscrito correctamente al curso", inscripcion });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ mensaje: "Ya estás inscrito en este curso" });
+        }
+        res.status(500).json({ mensaje: "Error al inscribirse", error });
     }
 });
 
