@@ -5,9 +5,16 @@ const verificarToken = require("../middleware/authMiddleware");
 
 // Crear curso
 router.post("/", verificarToken, async (req, res) => {
-    const curso = new Curso(req.body);
-    await curso.save();
-    res.json(curso);
+    try {
+        const curso = new Curso({
+            ...req.body,
+            instructor: req.usuario.id
+        });
+        await curso.save();
+        res.json(curso);
+    } catch (error) {
+        res.status(500).json(error);
+    }
 });
 
 // Obtener cursos
