@@ -191,4 +191,31 @@ router.delete("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructo
     }
 });
 
+// Marcar un módulo como completado (solo estudiantes inscritos)
+router.post("/:id/completar/:idModulo", verificarToken, verificarRol(['estudiante']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        const modulo = curso.modulos.id(req.params.idModulo);
+        if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
+
+        const inscripcion = await Inscripcion.findOne({ estudiante: req.usuario.id, curso: req.params.id });
+        if (!inscripcion) return res.status(403).json({ mensaje: "No estás inscrito en este curso" });
+
+        // Verificar si ya está completado
+        if (!inscripcion.modulosCompletados.includes(req.params.idModulo)) {
+            inscripcion.modulosCompletados.push(req.params.idModulo);
+            await inscripcion.save();
+        }
+
+        res.json({ 
+            mensaje: "Módulo marcado como completado", 
+            modulosCompletados: inscripcion.modulosCompletados 
+        });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al registrar progreso", error });
+    }
+});
+
 module.exports = router;

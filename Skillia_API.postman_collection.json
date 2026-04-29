@@ -338,6 +338,27 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Completar Módulo (Estudiante)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cursos/PONER_ID_CURSO/completar/PONER_ID_MODULO",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos",
+								"PONER_ID_CURSO",
+								"completar",
+								"PONER_ID_MODULO"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
