@@ -7,14 +7,15 @@ const jwt = require("jsonwebtoken");
 // Registro
 router.post("/register", async (req, res) => {
     try {
-        const { nombre, email, password } = req.body;
+        const { nombre, email, password, rol } = req.body;
 
         const hash = await bcrypt.hash(password, 10);
 
         const user = new Usuario({
             nombre,
             email,
-            password: hash
+            password: hash,
+            rol: rol || 'estudiante'
         });
 
         await user.save();
@@ -50,12 +51,12 @@ router.post("/login", async (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user._id },
+            { id: user._id, rol: user.rol },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 
-        res.json({ token });
+        res.json({ token, rol: user.rol });
 
     } catch (error) {
         console.log("ERROR LOGIN:", error);
