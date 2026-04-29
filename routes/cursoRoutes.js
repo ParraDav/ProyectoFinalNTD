@@ -101,4 +101,24 @@ router.post("/:id/inscribir", verificarToken, verificarRol(['estudiante']), asyn
     }
 });
 
+// Ver inscritos en un curso (solo instructor del curso o admin)
+router.get("/:id/inscritos", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para ver los inscritos de este curso" });
+        }
+
+        const inscripciones = await Inscripcion.find({ curso: req.params.id })
+            .populate('estudiante', 'nombre email')
+            .select('-curso');
+            
+        res.json(inscripciones);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener inscritos", error });
+    }
+});
+
 module.exports = router;

@@ -219,6 +219,26 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Ver Inscritos (Instructor/Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cursos/PONER_ID_AQUI/inscritos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos",
+								"PONER_ID_AQUI",
+								"inscritos"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
