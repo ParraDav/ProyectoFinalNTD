@@ -1,64 +1,35 @@
 const express = require("express");
 const router = express.Router();
-const Curso = require("../models/Curso");
+const Curso = require("../models/curso");
 const verificarToken = require("../middleware/authMiddleware");
 
-// Registro
-router.post("/register", async (req, res) => {
-    try {
-        const { nombre, email, password } = req.body;
-
-        const hash = await bcrypt.hash(password, 10);
-
-        const user = new Usuario({
-            nombre,
-            email,
-            password: hash
-        });
-
-        await user.save();
-        res.json({ mensaje: "Usuario registrado" });
-
-    } catch (error) {
-        res.status(500).json(error);
-    }
+// Crear curso
+router.post("/", verificarToken, async (req, res) => {
+    const curso = new Curso(req.body);
+    await curso.save();
+    res.json(curso);
 });
-// Login
-router.post("/login", async (req, res) => {
-    try {
-        const { email, password } = req.body;
 
-        console.log("EMAIL:", email);
-        console.log("PASSWORD:", password);
+// Obtener cursos
+router.get("/", verificarToken, async (req, res) => {
+    const cursos = await Curso.find();
+    res.json(cursos);
+});
 
-        const user = await Usuario.findOne({ email });
-        console.log("USER:", user);
+// Actualizar curso
+router.put("/:id", verificarToken, async (req, res) => {
+    const curso = await Curso.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+    );
+    res.json(curso);
+});
 
-        if (!user) {
-            return res.status(404).json({ mensaje: "Usuario no encontrado" });
-        }
-
-        console.log("PASSWORD BD:", user.password);
-
-        const valid = await bcrypt.compare(password, user.password);
-        console.log("VALID:", valid);
-
-        if (!valid) {
-            return res.status(401).json({ mensaje: "Contraseña incorrecta" });
-        }
-
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" }
-        );
-
-        res.json({ token });
-
-    } catch (error) {
-        console.log("ERROR LOGIN:", error);
-        res.status(500).json({ mensaje: "Error en el servidor" });
-    }
+// Eliminar curso
+router.delete("/:id", verificarToken, async (req, res) => {
+    await Curso.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: "Curso eliminado" });
 });
 
 module.exports = router;
