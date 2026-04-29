@@ -20,24 +20,61 @@ router.post("/", verificarToken, verificarRol(['instructor', 'administrador']), 
 
 // Obtener cursos
 router.get("/", verificarToken, async (req, res) => {
-    const cursos = await Curso.find();
-    res.json(cursos);
+    try {
+        let filtro = {};
+        // Si es estudiante, solo ve cursos publicados
+        if (req.usuario.rol === 'estudiante') {
+            filtro.estado = 'publicado';
+        }
+        // Si es instructor, podría querer ver sus propios cursos y los publicados? 
+        // Por simplicidad: si es estudiante -> publicados. Sino (admin/instructor) -> todos.
+        // Opcional: el instructor solo ve sus propios cursos o todos? 
+        // Para la plataforma, dejaremos que vean todos, pero solo editen los propios.
+        
+        const cursos = await Curso.find(filtro).populate("instructor", "nombre email");
+        res.json(cursos);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener cursos", error });
+    }
 });
 
 // Actualizar curso
 router.put("/:id", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
-    const curso = await Curso.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-    );
-    res.json(curso);
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        // Solo el dueño o un administrador pueden editar
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para editar este curso" });
+        }
+
+        const cursoActualizado = await Curso.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        res.json(cursoActualizado);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al actualizar curso", error });
+    }
 });
 
 // Eliminar curso
 router.delete("/:id", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
-    await Curso.findByIdAndDelete(req.params.id);
-    res.json({ mensaje: "Curso eliminado" });
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para eliminar este curso" });
+        }
+
+        await Curso.findByIdAndDelete(req.params.id);
+        res.json({ mensaje: "Curso eliminado" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al eliminar curso", error });
+    }
 });
 
 module.exports = router;
