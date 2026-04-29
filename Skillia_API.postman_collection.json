@@ -173,6 +173,30 @@
 					"response": []
 				},
 				{
+					"name": "Buscar Cursos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cursos?search=react",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cursos"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "react"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Actualizar Curso",
 					"request": {
 						"method": "PUT",

@@ -27,10 +27,15 @@ router.get("/", verificarToken, async (req, res) => {
         if (req.usuario.rol === 'estudiante') {
             filtro.estado = 'publicado';
         }
-        // Si es instructor, podría querer ver sus propios cursos y los publicados? 
-        // Por simplicidad: si es estudiante -> publicados. Sino (admin/instructor) -> todos.
-        // Opcional: el instructor solo ve sus propios cursos o todos? 
-        // Para la plataforma, dejaremos que vean todos, pero solo editen los propios.
+        
+        // Búsqueda por nombre o descripción si se proporciona ?search=
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            filtro.$or = [
+                { nombre: searchRegex },
+                { descripcion: searchRegex }
+            ];
+        }
         
         const cursos = await Curso.find(filtro).populate("instructor", "nombre email");
         res.json(cursos);
