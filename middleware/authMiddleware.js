@@ -1,10 +1,15 @@
 const jwt = require("jsonwebtoken");
 
 const verificarToken = (req, res, next) => {
-    const token = req.headers["authorization"];
+    let token = req.headers["authorization"];
 
     if (!token) {
         return res.status(401).json({ mensaje: "Token requerido" });
+    }
+
+    // Remover el prefijo 'Bearer ' si está presente
+    if (token.startsWith("Bearer ")) {
+        token = token.slice(7, token.length);
     }
 
     try {
