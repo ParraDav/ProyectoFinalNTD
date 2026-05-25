@@ -15,7 +15,7 @@ router.post("/", verificarToken, verificarRol(['instructor', 'administrador']), 
         await curso.save();
         res.json(curso);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ mensaje: "Error al crear curso" });
     }
 });
 

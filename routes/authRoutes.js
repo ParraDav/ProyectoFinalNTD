@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
         res.json({ mensaje: "Usuario registrado" });
 
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({mensaje: 'Error interno del servidor'});
     }
 });
 
