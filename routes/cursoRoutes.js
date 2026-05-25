@@ -5,6 +5,32 @@ const Inscripcion = require("../models/Inscripcion");
 const verificarToken = require("../middleware/authMiddleware");
 const verificarRol = require("../middleware/roleMiddleware");
 
+// ─── RUTA PÚBLICA (sin token) ────────────────────────────────────────────────
+// Obtener cursos publicados para home/ver-curso sin login
+router.get("/publicos", async (req, res) => {
+    try {
+        const cursos = await Curso.find({ estado: 'publicado' })
+            .populate("instructor", "nombre email");
+        res.json(cursos);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener cursos", error });
+    }
+});
+
+// Obtener un curso público por ID (para ver-curso sin login)
+router.get("/publicos/:id", async (req, res) => {
+    try {
+        const curso = await Curso.findOne({ _id: req.params.id, estado: 'publicado' })
+            .populate("instructor", "nombre email");
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+        res.json(curso);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener el curso", error });
+    }
+});
+
+// ─── RUTAS PROTEGIDAS ────────────────────────────────────────────────────────
+
 // Crear curso
 router.post("/", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
@@ -19,16 +45,13 @@ router.post("/", verificarToken, verificarRol(['instructor', 'administrador']), 
     }
 });
 
-// Obtener cursos
+// Obtener cursos (autenticado)
 router.get("/", verificarToken, async (req, res) => {
     try {
         let filtro = {};
-        // Si es estudiante, solo ve cursos publicados
         if (req.usuario.rol === 'estudiante') {
             filtro.estado = 'publicado';
         }
-        
-        // Búsqueda por nombre o descripción si se proporciona ?search=
         if (req.query.search) {
             const searchRegex = new RegExp(req.query.search, 'i');
             filtro.$or = [
@@ -36,7 +59,6 @@ router.get("/", verificarToken, async (req, res) => {
                 { descripcion: searchRegex }
             ];
         }
-        
         const cursos = await Curso.find(filtro).populate("instructor", "nombre email");
         res.json(cursos);
     } catch (error) {
@@ -49,17 +71,10 @@ router.put("/:id", verificarToken, verificarRol(['instructor', 'administrador'])
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
-        // Solo el dueño o un administrador pueden editar
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para editar este curso" });
         }
-
-        const cursoActualizado = await Curso.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true }
-        );
+        const cursoActualizado = await Curso.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(cursoActualizado);
     } catch (error) {
         res.status(500).json({ mensaje: "Error al actualizar curso", error });
@@ -71,11 +86,9 @@ router.delete("/:id", verificarToken, verificarRol(['instructor', 'administrador
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para eliminar este curso" });
         }
-
         await Curso.findByIdAndDelete(req.params.id);
         res.json({ mensaje: "Curso eliminado" });
     } catch (error) {
@@ -90,12 +103,10 @@ router.post("/:id/inscribir", verificarToken, verificarRol(['estudiante']), asyn
         if (!curso || curso.estado !== 'publicado') {
             return res.status(404).json({ mensaje: "Curso no encontrado o no disponible" });
         }
-
         const inscripcion = new Inscripcion({
             estudiante: req.usuario.id,
             curso: curso._id
         });
-
         await inscripcion.save();
         res.json({ mensaje: "Inscrito correctamente al curso", inscripcion });
     } catch (error) {
@@ -106,44 +117,33 @@ router.post("/:id/inscribir", verificarToken, verificarRol(['estudiante']), asyn
     }
 });
 
-// Ver inscritos en un curso (solo instructor del curso o admin)
+// Ver inscritos en un curso
 router.get("/:id/inscritos", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para ver los inscritos de este curso" });
         }
-
         const inscripciones = await Inscripcion.find({ curso: req.params.id })
             .populate('estudiante', 'nombre email')
             .select('-curso');
-            
         res.json(inscripciones);
     } catch (error) {
         res.status(500).json({ mensaje: "Error al obtener inscritos", error });
     }
 });
 
-// Agregar un módulo a un curso
+// Agregar módulo
 router.post("/:id/modulos", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
         }
-
-        const nuevoModulo = {
-            titulo: req.body.titulo,
-            contenido: req.body.contenido
-        };
-
-        curso.modulos.push(nuevoModulo);
+        curso.modulos.push({ titulo: req.body.titulo, contenido: req.body.contenido });
         await curso.save();
-
         const moduloCreado = curso.modulos[curso.modulos.length - 1];
         res.status(201).json({ mensaje: "Módulo agregado", modulo: moduloCreado });
     } catch (error) {
@@ -151,22 +151,18 @@ router.post("/:id/modulos", verificarToken, verificarRol(['instructor', 'adminis
     }
 });
 
-// Actualizar un módulo específico
+// Actualizar módulo
 router.put("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
         }
-
         const modulo = curso.modulos.id(req.params.idModulo);
         if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
-
         if (req.body.titulo) modulo.titulo = req.body.titulo;
         if (req.body.contenido) modulo.contenido = req.body.contenido;
-
         await curso.save();
         res.json({ mensaje: "Módulo actualizado", modulo });
     } catch (error) {
@@ -174,50 +170,38 @@ router.put("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructor',
     }
 });
 
-// Eliminar un módulo específico
+// Eliminar módulo
 router.delete("/:id/modulos/:idModulo", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
             return res.status(403).json({ mensaje: "No tienes permiso para modificar este curso" });
         }
-
         const modulo = curso.modulos.id(req.params.idModulo);
         if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
-
         curso.modulos.pull({ _id: req.params.idModulo });
         await curso.save();
-        
         res.json({ mensaje: "Módulo eliminado" });
     } catch (error) {
         res.status(500).json({ mensaje: "Error al eliminar módulo", error });
     }
 });
 
-// Marcar un módulo como completado (solo estudiantes inscritos)
+// Marcar módulo como completado
 router.post("/:id/completar/:idModulo", verificarToken, verificarRol(['estudiante']), async (req, res) => {
     try {
         const curso = await Curso.findById(req.params.id);
         if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
-
         const modulo = curso.modulos.id(req.params.idModulo);
         if (!modulo) return res.status(404).json({ mensaje: "Módulo no encontrado" });
-
         const inscripcion = await Inscripcion.findOne({ estudiante: req.usuario.id, curso: req.params.id });
         if (!inscripcion) return res.status(403).json({ mensaje: "No estás inscrito en este curso" });
-
-        // Verificar si ya está completado
         if (!inscripcion.modulosCompletados.includes(req.params.idModulo)) {
             inscripcion.modulosCompletados.push(req.params.idModulo);
             await inscripcion.save();
         }
-
-        res.json({ 
-            mensaje: "Módulo marcado como completado", 
-            modulosCompletados: inscripcion.modulosCompletados 
-        });
+        res.json({ mensaje: "Módulo marcado como completado", modulosCompletados: inscripcion.modulosCompletados });
     } catch (error) {
         res.status(500).json({ mensaje: "Error al registrar progreso", error });
     }

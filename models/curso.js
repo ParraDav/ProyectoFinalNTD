@@ -8,16 +8,19 @@ const moduloSchema = new mongoose.Schema({
 const cursoSchema = new mongoose.Schema({
     nombre: { type: String, required: true },
     descripcion: { type: String, required: true },
-    instructor: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Usuario', 
-        required: true 
+    instructor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Usuario',
+        required: true
     },
-    estado: { 
-        type: String, 
-        enum: ['borrador', 'publicado'], 
-        default: 'borrador' 
+    estado: {
+        type: String,
+        enum: ['borrador', 'publicado'],
+        default: 'borrador'
     },
+    duracion: { type: String, default: '' },
+    prerequisito: { type: String, default: '' },
+    edadMinima: { type: Number, default: 0 },
     modulos: [moduloSchema]
 }, { timestamps: true });
 

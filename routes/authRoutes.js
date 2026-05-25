@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
         res.json({ mensaje: "Usuario registrado" });
 
     } catch (error) {
-        res.status(500).json({mensaje: 'Error interno del servidor'});
+        res.status(500).json({ mensaje: 'Error interno del servidor' });
     }
 });
 
@@ -31,20 +31,13 @@ router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        console.log("EMAIL:", email);
-        console.log("PASSWORD:", password);
-
         const user = await Usuario.findOne({ email });
-        console.log("USER:", user);
 
         if (!user) {
             return res.status(404).json({ mensaje: "Usuario no encontrado" });
         }
 
-        console.log("PASSWORD BD:", user.password);
-
         const valid = await bcrypt.compare(password, user.password);
-        console.log("VALID:", valid);
 
         if (!valid) {
             return res.status(401).json({ mensaje: "Contraseña incorrecta" });
@@ -59,7 +52,6 @@ router.post("/login", async (req, res) => {
         res.json({ token, rol: user.rol });
 
     } catch (error) {
-        console.log("ERROR LOGIN:", error);
         res.status(500).json({ mensaje: "Error en el servidor" });
     }
 });
