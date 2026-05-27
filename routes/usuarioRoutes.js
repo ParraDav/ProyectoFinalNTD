@@ -33,8 +33,12 @@ router.get("/mis-cursos", verificarToken, async (req, res) => {
                 populate: { path: 'instructor', select: 'nombre email' }
             });
 
-        // Extraer solo la información de los cursos de las inscripciones
-        const misCursos = inscripciones.map(inscripcion => inscripcion.curso);
+        const misCursos = inscripciones.map(inscripcion => {
+            if (!inscripcion.curso) return null;
+            const cursoObj = inscripcion.curso.toObject();
+            cursoObj.modulosCompletados = inscripcion.modulosCompletados || [];
+            return cursoObj;
+        }).filter(Boolean);
         
         res.json(misCursos);
     } catch (error) {
