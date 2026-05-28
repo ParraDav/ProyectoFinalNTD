@@ -66,6 +66,29 @@ router.get("/", verificarToken, async (req, res) => {
     }
 });
 
+// Obtener un curso por ID (autenticado)
+router.get("/:id", verificarToken, async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id)
+            .populate("instructor", "nombre email");
+        if (!curso) {
+            return res.status(404).json({ mensaje: "Curso no encontrado" });
+        }
+        // Si el curso es borrador, solo el instructor dueño o el admin pueden verlo, o si el estudiante está inscrito
+        if (curso.estado === 'borrador') {
+            if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+                const inscripcion = await Inscripcion.findOne({ estudiante: req.usuario.id, curso: curso._id });
+                if (!inscripcion) {
+                    return res.status(403).json({ mensaje: "No tienes permiso para ver este curso en borrador" });
+                }
+            }
+        }
+        res.json(curso);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener el curso", error });
+    }
+});
+
 // Actualizar curso
 router.put("/:id", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
     try {
