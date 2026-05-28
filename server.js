@@ -37,13 +37,11 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/metricas", require("./routes/metricasRoutes"));
 
 // Conexión con MongoDB
-const connectDB = require("./db");
-
-connectDB().then(() => {
-    app.listen(process.env.PORT || 3000, () => {
-        console.log("Servidor corriendo en puerto " + (process.env.PORT || 3000));
-    });
-}).catch(err => {
-    console.error("Error al iniciar el servidor:", err);
-    process.exit(1);
-});
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => {
+        console.log("Conectado a MongoDB");
+        app.listen(process.env.PORT || 3000, () => {
+            console.log("Servidor corriendo en puerto " + (process.env.PORT || 3000));
+        });
+    })
+    .catch(err => console.log(err));
