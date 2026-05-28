@@ -76,7 +76,8 @@ router.get("/:id", verificarToken, async (req, res) => {
         }
         // Si el curso es borrador, solo el instructor dueño o el admin pueden verlo, o si el estudiante está inscrito
         if (curso.estado === 'borrador') {
-            if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            const instructorId = curso.instructor._id ? curso.instructor._id.toString() : curso.instructor.toString();
+            if (instructorId !== req.usuario.id && req.usuario.rol !== 'administrador') {
                 const inscripcion = await Inscripcion.findOne({ estudiante: req.usuario.id, curso: curso._id });
                 if (!inscripcion) {
                     return res.status(403).json({ mensaje: "No tienes permiso para ver este curso en borrador" });
