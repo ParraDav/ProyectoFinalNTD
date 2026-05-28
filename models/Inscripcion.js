@@ -17,7 +17,15 @@ const inscripcionSchema = new mongoose.Schema({
     },
     modulosCompletados: [{
         type: mongoose.Schema.Types.ObjectId
-    }]
+    }],
+    estadoCertificado: {
+        type: String,
+        enum: ['no_solicitado', 'solicitado', 'aprobado'],
+        default: 'no_solicitado'
+    },
+    fechaAprobacionCertificado: {
+        type: Date
+    }
 }, { timestamps: true });
 
 // Evitar que un estudiante se inscriba dos veces al mismo curso

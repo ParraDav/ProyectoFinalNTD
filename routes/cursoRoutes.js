@@ -231,4 +231,68 @@ router.post("/:id/completar/:idModulo", verificarToken, verificarRol(['estudiant
     }
 });
 
+// Solicitar certificado (estudiante)
+router.post("/:id/solicitar-certificado", verificarToken, verificarRol(['estudiante']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        const inscripcion = await Inscripcion.findOne({ estudiante: req.usuario.id, curso: req.params.id });
+        if (!inscripcion) return res.status(403).json({ mensaje: "No estás inscrito en este curso" });
+
+        if (!curso.modulos || curso.modulos.length === 0) {
+            return res.status(400).json({ mensaje: "Este curso no contiene módulos y no genera certificados" });
+        }
+
+        const completadosCount = inscripcion.modulosCompletados ? inscripcion.modulosCompletados.length : 0;
+        if (completadosCount < curso.modulos.length) {
+            return res.status(400).json({ mensaje: "Debes completar el 100% de los módulos para solicitar el certificado" });
+        }
+
+        inscripcion.estadoCertificado = 'solicitado';
+        await inscripcion.save();
+
+        res.json({ 
+            mensaje: "Certificado solicitado con éxito", 
+            estadoCertificado: inscripcion.estadoCertificado 
+        });
+    } catch (error) {
+        console.error("Error en solicitar-certificado:", error);
+        res.status(500).json({ mensaje: "Error al solicitar el certificado", error: error.message || error });
+    }
+});
+
+// Aprobar certificado (instructor / administrador)
+router.post("/:id/aprobar-certificado/:idInscripcion", verificarToken, verificarRol(['instructor', 'administrador']), async (req, res) => {
+    try {
+        const curso = await Curso.findById(req.params.id);
+        if (!curso) return res.status(404).json({ mensaje: "Curso no encontrado" });
+
+        // Verificar permisos del instructor dueño o administrador
+        if (curso.instructor.toString() !== req.usuario.id && req.usuario.rol !== 'administrador') {
+            return res.status(403).json({ mensaje: "No tienes permiso para aprobar certificados en este curso" });
+        }
+
+        const inscripcion = await Inscripcion.findById(req.params.idInscripcion).populate('estudiante', 'nombre email');
+        if (!inscripcion) return res.status(404).json({ mensaje: "Inscripción no encontrada" });
+
+        if (inscripcion.curso.toString() !== req.params.id) {
+            return res.status(400).json({ mensaje: "La inscripción no corresponde al curso especificado" });
+        }
+
+        inscripcion.estadoCertificado = 'aprobado';
+        inscripcion.fechaAprobacionCertificado = new Date();
+        await inscripcion.save();
+
+        res.json({ 
+            mensaje: "Certificado aprobado con éxito", 
+            estadoCertificado: inscripcion.estadoCertificado,
+            inscripcion
+        });
+    } catch (error) {
+        console.error("Error en aprobar-certificado:", error);
+        res.status(500).json({ mensaje: "Error al aprobar el certificado", error: error.message || error });
+    }
+});
+
 module.exports = router;
